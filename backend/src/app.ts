@@ -1,0 +1,3 @@
+﻿import cors from 'cors'; import express from 'express'; import helmet from 'helmet';
+import { env } from './config/env.js'; import { errorHandler,notFound } from './middleware/errors.js'; import { authRouter } from './routes/auth.routes.js'; import { taskRouter } from './routes/task.routes.js';
+export const app=express(); app.use(helmet()); app.use(cors({origin:env.FRONTEND_URL})); app.use(express.json({limit:'100kb'})); app.get('/api/health',(_req,res)=>res.json({status:'ok'})); app.use('/api/auth',authRouter); app.use('/api/tasks',taskRouter); app.use(notFound); app.use(errorHandler);
