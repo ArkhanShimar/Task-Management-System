@@ -6,3 +6,6 @@ dist/
 coverage/
 INTERVIEW_NOTES.md
 
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
