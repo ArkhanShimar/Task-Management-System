@@ -1,0 +1,6 @@
+﻿import { format,parseISO } from 'date-fns'; import { CalendarDays,MoreHorizontal,Pencil,Trash2 } from 'lucide-react'; import { useState } from 'react'; import type { Task } from '../types';
+const labels={pending:'Pending',in_progress:'In progress',completed:'Completed'};
+export function TaskCard({task,onEdit,onDelete}:{task:Task;onEdit:()=>void;onDelete:()=>void}){
+ const[menu,setMenu]=useState(false); const overdue=task.status!=='completed'&&task.dueDate<new Date().toLocaleDateString('en-CA');
+ return <article className={'task-card '+(task.status==='completed'?'done':'')}><div className="task-card-top"><span className={'priority '+task.priority}>{task.priority}</span><div className="menu-wrap"><button className="icon-button" onClick={()=>setMenu(!menu)} aria-label="Task actions"><MoreHorizontal/></button>{menu&&<div className="mini-menu"><button onClick={onEdit}><Pencil/>Edit</button><button className="danger" onClick={onDelete}><Trash2/>Delete</button></div>}</div></div><h3>{task.title}</h3>{task.description&&<p>{task.description}</p>}<div className="task-meta"><span className={'status '+task.status}>{labels[task.status]}</span><span className={overdue?'overdue':''}><CalendarDays/>{overdue?'Overdue · ':''}{format(parseISO(task.dueDate),'MMM d')}</span></div></article>;
+}
