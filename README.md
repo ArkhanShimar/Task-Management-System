@@ -202,3 +202,18 @@ The assessment email and password remain the defaults required by the brief. The
 Dashboard summary cards are interactive shortcuts. Selecting a card clears unrelated filters, applies its status (including a real overdue-only API query), and smoothly scrolls the task list into view. The task list endpoint accepts `overdue=true` to return incomplete tasks with a due date before today.
 
 The landing illustration is built with semantic HTML and CSS 3D transforms rather than a large image or rendering library. Scroll sections use IntersectionObserver for one-time reveal transitions and respect the operating system's reduced-motion setting.
+
+## Task reminders
+
+Every task receives a one-day-early reminder by default. The create/edit form can change the lead time to:
+
+- On the due date
+- 1 day before (default)
+- 2 days before
+- 3 days before
+- 1 week before
+- No reminder
+
+The protected `GET /api/reminders` endpoint returns all reminder-enabled, incomplete tasks with a calculated `reminderDate`, `reminderState`, and active/upcoming totals. The reminder date is derived from `due_date - reminder_days_before`, so editing a due date automatically moves the reminder too.
+
+The dashboard checks active reminders after login, shows a sidebar badge, and sends at most one in-app toast per task per calendar day. Users may opt into the browser Notification API from the Reminders page. Browser alerts work while Daymark is open; background notifications while the site is closed would require a service worker plus a scheduled push-notification backend.
