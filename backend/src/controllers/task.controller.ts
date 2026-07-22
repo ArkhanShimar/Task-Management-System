@@ -6,11 +6,11 @@ import { AppError } from '../utils/appError.js';
 
 interface TaskRow extends RowDataPacket {
   id: number; title: string; description: string | null; priority: string; status: string;
-  dueDate: string; createdAt: string; updatedAt: string; deletedAt?: string; daysRemaining?: number;
+  dueDate: string; reminderDaysBefore: number | null; createdAt: string; updatedAt: string; deletedAt?: string; daysRemaining?: number;
 }
 
 const fields = `SELECT id, title, description, priority, status, due_date AS dueDate,
-  created_at AS createdAt, updated_at AS updatedAt`;
+  reminder_days_before AS reminderDaysBefore, created_at AS createdAt, updated_at AS updatedAt`;
 
 async function clearExpiredTasks(userId: number) {
   await pool.execute(
@@ -48,8 +48,8 @@ export const createTask: RequestHandler = async (req, res, next) => {
   try {
     const input = taskSchema.parse(req.body);
     const [result] = await pool.execute<ResultSetHeader>(
-      'INSERT INTO tasks (user_id, title, description, priority, status, due_date) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.user!.id, input.title, input.description || null, input.priority, input.status, input.dueDate],
+      'INSERT INTO tasks (user_id, title, description, priority, status, due_date, reminder_days_before) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [req.user!.id, input.title, input.description || null, input.priority, input.status, input.dueDate, input.reminderDaysBefore],
     );
     const [tasks] = await pool.execute<TaskRow[]>(`${fields} FROM tasks WHERE id = ?`, [result.insertId]);
     res.status(201).json({ task: tasks[0], message: 'Task created.' });
@@ -60,8 +60,8 @@ export const updateTask: RequestHandler = async (req, res, next) => {
   try {
     const input = taskSchema.parse(req.body);
     const [result] = await pool.execute<ResultSetHeader>(
-      'UPDATE tasks SET title = ?, description = ?, priority = ?, status = ?, due_date = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
-      [input.title, input.description || null, input.priority, input.status, input.dueDate, Number(req.params.id), req.user!.id],
+      'UPDATE tasks SET title = ?, description = ?, priority = ?, status = ?, due_date = ?, reminder_days_before = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [input.title, input.description || null, input.priority, input.status, input.dueDate, input.reminderDaysBefore, Number(req.params.id), req.user!.id],
     );
     if (!result.affectedRows) throw new AppError(404, 'Task not found.');
     const [tasks] = await pool.execute<TaskRow[]>(`${fields} FROM tasks WHERE id = ?`, [Number(req.params.id)]);

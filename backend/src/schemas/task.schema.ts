@@ -6,6 +6,7 @@ export const taskSchema = z.object({
   priority: z.enum(['low', 'medium', 'high'], { message: 'Choose a priority.' }),
   status: z.enum(['pending', 'in_progress', 'completed'], { message: 'Choose a status.' }),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a valid due date.').refine((date) => date >= today(), 'Due date cannot be earlier than today.'),
+  reminderDaysBefore: z.number().int().min(0).max(30).nullable().default(1),
 });
 const optionalDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a valid date.').optional();
 export const taskQuerySchema = z.object({

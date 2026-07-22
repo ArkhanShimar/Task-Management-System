@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   priority ENUM('low', 'medium', 'high') NOT NULL,
   status ENUM('pending', 'in_progress', 'completed') NOT NULL DEFAULT 'pending',
   due_date DATE NOT NULL,
+  reminder_days_before TINYINT UNSIGNED NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL DEFAULT NULL,
@@ -22,5 +23,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   INDEX idx_tasks_user_status (user_id, status),
   INDEX idx_tasks_due_date (due_date),
   INDEX idx_tasks_priority (priority),
-  INDEX idx_tasks_deleted_at (deleted_at)
+  INDEX idx_tasks_deleted_at (deleted_at),
+  INDEX idx_tasks_reminder (user_id, reminder_days_before, due_date)
 );
