@@ -169,3 +169,24 @@ Additional authenticated endpoints:
 Task search also accepts optional `fromDate` and `toDate` query parameters in `YYYY-MM-DD` format. Both bounds apply to the task due date and can be combined with title, status, and priority filters.
 
 The appearance button switches between the shared light and dark palettes. The preference is saved locally and falls back to the operating-system preference on the first visit.
+
+## Profile management
+
+Authenticated users can manage their name, email address, and password from the **Manage profile** sidebar section.
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/profile` | Load the current user's profile |
+| PUT | `/api/profile` | Update name/email and optionally change password |
+
+A password change requires both the current password and a new password containing at least six characters. Name, email, password, and duplicate-email rules are validated by the API and mirrored by the form for quicker feedback.
+
+The seed creates only the required assessment account; it no longer inserts demonstration tasks. Seed values can be configured without changing source code:
+
+```env
+SEED_USER_NAME=Admin User
+SEED_USER_EMAIL=admin@test.com
+SEED_USER_PASSWORD=123456
+```
+
+The assessment email and password remain the defaults required by the brief. The login form itself starts empty and does not embed credentials into the UI.
