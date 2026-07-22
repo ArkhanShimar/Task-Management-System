@@ -1,4 +1,4 @@
-﻿import type { Summary, Task, TaskInput, User } from '../types';
+﻿import type { Reminder, ReminderSummary, Summary, Task, TaskInput, User } from '../types';
 const base = import.meta.env.VITE_API_URL || '/api';
 class ApiError extends Error { constructor(message: string, public errors?: Record<string, string[]>) { super(message); } }
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -20,6 +20,7 @@ export const api = {
   updateProfile: (profile: { name: string; email: string; currentPassword: string; newPassword: string }) => request<{ user: User; message: string }>('/profile', { method: 'PUT', body: JSON.stringify(profile) }),
   tasks: (query: string) => request<{ tasks: Task[] }>('/tasks' + query),
   summary: () => request<{ summary: Summary }>('/tasks/summary'),
+  reminders: () => request<{ reminders: Reminder[]; summary: ReminderSummary }>('/reminders'),
   create: (task: TaskInput) => request<{ task: Task }>('/tasks', { method: 'POST', body: JSON.stringify(task) }),
   update: (id: number, task: TaskInput) => request<{ task: Task }>('/tasks/' + id, { method: 'PUT', body: JSON.stringify(task) }),
   remove: (id: number) => request<{ message: string }>('/tasks/' + id, { method: 'DELETE' }),

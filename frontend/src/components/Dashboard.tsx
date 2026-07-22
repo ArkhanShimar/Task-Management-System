@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarRange, CheckCircle2, ChevronDown, Clock3, ListTodo, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, TimerReset, Trash2, UserRound, X, XCircle } from 'lucide-react';
+import { BellRing, CalendarRange, CheckCircle2, ChevronDown, Clock3, ListTodo, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, TimerReset, Trash2, UserRound, X, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { Priority, Status, Summary, Task, TaskInput } from '../types';
@@ -10,6 +10,7 @@ import { TaskCard } from './TaskCard';
 import { TaskModal } from './TaskModal';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfilePage } from './ProfilePage';
+import { RemindersPage } from './RemindersPage';
 
 const empty: Summary = { total: 0, pending: 0, inProgress: 0, completed: 0, overdue: 0 };
 
@@ -18,7 +19,7 @@ export function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [summary, setSummary] = useState(empty);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'tasks' | 'bin' | 'profile'>('tasks');
+  const [view, setView] = useState<'tasks' | 'bin' | 'profile' | 'reminders'>('tasks');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<Status | ''>('');
   const [priority, setPriority] = useState<Priority | ''>('');
@@ -27,10 +28,12 @@ export function Dashboard() {
   const [toDate, setToDate] = useState('');
   const [dateError, setDateError] = useState('');
   const [overdueOnly, setOverdueOnly] = useState(false);
+  const [reminderCount, setReminderCount] = useState(0);
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const taskSectionRef = useRef<HTMLElement>(null);
+  const remindersChecked = useRef(false);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('daymark_sidebar') === 'collapsed');
   const toggleSidebar = () => setCollapsed((current) => { const next = !current; localStorage.setItem('daymark_sidebar', next ? 'collapsed' : 'expanded'); return next; });
 
@@ -58,14 +61,31 @@ export function Dashboard() {
   }, [search, status, priority, sort, fromDate, toDate, overdueOnly]);
 
   useEffect(() => { const timer = setTimeout(load, 300); return () => clearTimeout(timer); }, [load]);
+  useEffect(() => {
+    if (remindersChecked.current) return;
+    remindersChecked.current = true;
+    api.reminders().then((data) => {
+      setReminderCount(data.summary.active);
+      const active = data.reminders.filter((reminder) => reminder.reminderState === 'active');
+      const storageKey = 'daymark_reminders_' + new Date().toLocaleDateString('en-CA');
+      const seen = new Set<number>(JSON.parse(localStorage.getItem(storageKey) || '[]'));
+      const unseen = active.filter((reminder) => !seen.has(reminder.id));
+      unseen.slice(0, 3).forEach((reminder) => {
+        toast.info('Reminder: ' + reminder.title, { description: 'Due ' + reminder.dueDate });
+        if ('Notification' in window && Notification.permission === 'granted') new Notification('Daymark reminder', { body: reminder.title + ' is due ' + reminder.dueDate });
+        seen.add(reminder.id);
+      });
+      localStorage.setItem(storageKey, JSON.stringify([...seen]));
+    }).catch(() => undefined);
+  }, []);
   const save = async (input: TaskInput) => {
     if (editing) { await api.update(editing.id, input); toast.success('Task updated'); }
     else { await api.create(input); toast.success('Task added'); }
-    setModal(false); setEditing(null); await load();
+    setModal(false); setEditing(null); await load(); setReminderCount((await api.reminders()).summary.active);
   };
   const remove = async (task: Task) => {
     if (!confirm('Move “' + task.title + '” to the recycle bin?')) return;
-    await api.remove(task.id); toast.success('Task moved to the recycle bin', { description: 'You can restore it for the next five days.' }); await load();
+    await api.remove(task.id); toast.success('Task moved to the recycle bin', { description: 'You can restore it for the next five days.' }); await load(); setReminderCount((await api.reminders()).summary.active);
   };
   const clearFilters = () => { setSearch(''); setStatus(''); setPriority(''); setFromDate(''); setToDate(''); setDateError(''); setOverdueOnly(false); };
   const hasFilters = search || status || priority || fromDate || toDate || overdueOnly;
@@ -85,6 +105,7 @@ export function Dashboard() {
       <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label="Close menu">×</button>
       <nav><p>WORKSPACE</p>
         <button title="My tasks" className={view === 'tasks' ? 'active' : ''} onClick={() => { setView('tasks'); setMobileNav(false); }}><ListTodo /><span>My tasks</span></button>
+        <button title="Reminders" className={view === 'reminders' ? 'active' : ''} onClick={() => { setView('reminders'); setMobileNav(false); }}><BellRing /><span>Reminders</span>{reminderCount > 0 && <b className="nav-badge">{reminderCount}</b>}</button>
         <button title="Recycle bin" className={view === 'bin' ? 'active' : ''} onClick={() => { setView('bin'); setMobileNav(false); }}><Trash2 /><span>Recycle bin</span></button>
         <button title="Manage profile" className={view === 'profile' ? 'active' : ''} onClick={() => { setView('profile'); setMobileNav(false); }}><UserRound /><span>Manage profile</span></button>
       </nav>
@@ -93,7 +114,7 @@ export function Dashboard() {
     </aside>
     <main className="workspace">
       <header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu /></button><span>{date}</span><div className="top-actions"><ThemeToggle /><button className="secondary signout" onClick={logout}><LogOut /> Sign out</button></div></header>
-      <div className="content">{view === 'bin' ? <RecycleBin onChange={loadSummary} /> : view === 'profile' ? <ProfilePage /> : <>
+      <div className="content">{view === 'bin' ? <RecycleBin onChange={loadSummary} /> : view === 'profile' ? <ProfilePage /> : view === 'reminders' ? <RemindersPage onCountChange={setReminderCount} /> : <>
         <section className="welcome"><div><p className="eyebrow">YOUR DAY AT A GLANCE</p><h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {first}.</h1><p>Here’s what’s on your plate. One thing at a time.</p></div><button className="primary" onClick={() => { setEditing(null); setModal(true); }}><Plus />Add a task</button></section>
         <section className="summary-grid">{cards.map(([label, count, Icon, tone]) => <button type="button" className={'summary-card ' + tone} key={label} onClick={() => selectSummary(label)}><span><Icon /></span><div><strong>{count}</strong><small>{label}</small></div></button>)}</section>
         <section className="task-section" ref={taskSectionRef}>
