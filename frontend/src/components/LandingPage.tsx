@@ -1,11 +1,11 @@
 ﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDown, ArrowRight, CalendarDays, Check, CheckCircle2, Layers3, Search, ShieldCheck, SlidersHorizontal, Sparkles, Zap } from 'lucide-react';
+import { ArrowDown, ArrowRight, CalendarDays, Check, CheckCircle2, Layers3, LogOut, Search, ShieldCheck, SlidersHorizontal, Sparkles, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 
 export function LandingPage() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   useEffect(() => {
     const elements = document.querySelectorAll<HTMLElement>('.reveal');
     const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
@@ -23,7 +23,7 @@ export function LandingPage() {
     <header className="landing-nav">
       <Link to="/" className="brand"><span className="brand-mark">D</span><span>daymark</span></Link>
       <nav aria-label="Main navigation"><a href="#features">Features</a><a href="#workflow">How it works</a></nav>
-      <div className="landing-nav-actions"><ThemeToggle />{!token && <Link className="landing-login" to="/login">Sign in</Link>}<Link className="primary" to={appLink}>{appLabel}<ArrowRight /></Link></div>
+      <div className="landing-nav-actions"><ThemeToggle />{token && <button className="landing-logout" onClick={logout}><LogOut />Log out</button>}<Link className="primary" to={appLink}>{appLabel}<ArrowRight /></Link></div>
     </header>
 
     <section className="landing-hero">

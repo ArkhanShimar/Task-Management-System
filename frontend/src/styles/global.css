@@ -924,3 +924,57 @@ html { scroll-behavior: smooth; }
   .task-board, .visual-chip, .floating-date, .scene-orbit, .scroll-cue svg { animation: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* Landing state and theme corrections */
+.landing a.primary { text-decoration: none; }
+.landing-logout {
+  min-height: 40px;
+  padding: 8px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.landing-logout:hover { background: var(--surface-2); color: var(--text); }
+.landing-logout svg { width: 14px; }
+
+.workflow-panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+}
+.workflow-copy h2 { color: var(--text); }
+.workflow-copy > p { color: var(--muted); }
+.workflow-steps article {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+.workflow-steps b { color: var(--text); }
+.workflow-steps p { color: var(--muted); }
+.workflow-steps article > svg { color: var(--faint); }
+
+:root[data-theme='dark'] .workflow-panel {
+  border-color: rgba(255,255,255,.07);
+  background: var(--sidebar);
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+}
+:root[data-theme='dark'] .workflow-copy h2 { color: #fff; }
+:root[data-theme='dark'] .workflow-copy > p { color: #9498aa; }
+:root[data-theme='dark'] .workflow-steps article {
+  border-color: rgba(255,255,255,.07);
+  background: rgba(255,255,255,.035);
+}
+:root[data-theme='dark'] .workflow-steps b { color: #fff; }
+:root[data-theme='dark'] .workflow-steps p { color: #7f8396; }
+:root[data-theme='dark'] .workflow-steps article > svg { color: #686c80; }
+
+@media (max-width: 760px) {
+  .landing-logout { width: 38px; padding: 0; justify-content: center; font-size: 0; }
+}
