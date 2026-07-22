@@ -14,6 +14,7 @@ export const taskQuerySchema = z.object({
   priority: z.enum(['low', 'medium', 'high']).optional(),
   sort: z.enum(['newest', 'oldest', 'due_date']).optional().default('newest'),
   fromDate: optionalDate, toDate: optionalDate,
+  overdue: z.enum(['true']).optional(),
 }).refine((query) => !query.fromDate || !query.toDate || query.fromDate <= query.toDate, {
   message: 'The start date cannot be after the end date.', path: ['fromDate'],
 });

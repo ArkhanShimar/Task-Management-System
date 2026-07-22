@@ -29,6 +29,7 @@ export const listTasks: RequestHandler = async (req, res, next) => {
     if (query.priority) { conditions.push('priority = ?'); values.push(query.priority); }
     if (query.fromDate) { conditions.push('due_date >= ?'); values.push(query.fromDate); }
     if (query.toDate) { conditions.push('due_date <= ?'); values.push(query.toDate); }
+    if (query.overdue) conditions.push("due_date < CURDATE() AND status != 'completed'");
     const order = query.sort === 'oldest' ? 'created_at ASC' : query.sort === 'due_date' ? 'due_date ASC, created_at DESC' : 'created_at DESC';
     const [tasks] = await pool.execute<TaskRow[]>(`${fields} FROM tasks WHERE ${conditions.join(' AND ')} ORDER BY ${order}`, values);
     res.json({ tasks });
