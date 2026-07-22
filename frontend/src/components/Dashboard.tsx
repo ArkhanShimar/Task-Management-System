@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CalendarRange, CheckCircle2, ChevronDown, Clock3, ListTodo, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, TimerReset, Trash2, UserRound, X, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
@@ -25,9 +26,11 @@ export function Dashboard() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [dateError, setDateError] = useState('');
+  const [overdueOnly, setOverdueOnly] = useState(false);
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [mobileNav, setMobileNav] = useState(false);
+  const taskSectionRef = useRef<HTMLElement>(null);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('daymark_sidebar') === 'collapsed');
   const toggleSidebar = () => setCollapsed((current) => { const next = !current; localStorage.setItem('daymark_sidebar', next ? 'collapsed' : 'expanded'); return next; });
 
@@ -46,12 +49,13 @@ export function Dashboard() {
       if (priority) params.set('priority', priority);
       if (fromDate) params.set('fromDate', fromDate);
       if (toDate) params.set('toDate', toDate);
+      if (overdueOnly) params.set('overdue', 'true');
       params.set('sort', sort);
       const [data, counts] = await Promise.all([api.tasks('?' + params), api.summary()]);
       setTasks(data.tasks); setSummary(counts.summary);
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Could not load tasks.'); }
     finally { setLoading(false); }
-  }, [search, status, priority, sort, fromDate, toDate]);
+  }, [search, status, priority, sort, fromDate, toDate, overdueOnly]);
 
   useEffect(() => { const timer = setTimeout(load, 300); return () => clearTimeout(timer); }, [load]);
   const save = async (input: TaskInput) => {
@@ -63,15 +67,21 @@ export function Dashboard() {
     if (!confirm('Move “' + task.title + '” to the recycle bin?')) return;
     await api.remove(task.id); toast.success('Task moved to the recycle bin', { description: 'You can restore it for the next five days.' }); await load();
   };
-  const clearFilters = () => { setSearch(''); setStatus(''); setPriority(''); setFromDate(''); setToDate(''); setDateError(''); };
-  const hasFilters = search || status || priority || fromDate || toDate;
+  const clearFilters = () => { setSearch(''); setStatus(''); setPriority(''); setFromDate(''); setToDate(''); setDateError(''); setOverdueOnly(false); };
+  const hasFilters = search || status || priority || fromDate || toDate || overdueOnly;
+  const selectSummary = (label: string) => {
+    setSearch(''); setPriority(''); setFromDate(''); setToDate(''); setDateError('');
+    setOverdueOnly(label === 'Overdue');
+    setStatus(label === 'Pending' ? 'pending' : label === 'In progress' ? 'in_progress' : label === 'Completed' ? 'completed' : '');
+    window.setTimeout(() => taskSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
   const cards = [['All tasks', summary.total, ListTodo, 'ink'], ['Pending', summary.pending, Clock3, 'amber'], ['In progress', summary.inProgress, TimerReset, 'blue'], ['Completed', summary.completed, CheckCircle2, 'green'], ['Overdue', summary.overdue, XCircle, 'red']] as const;
   const first = user?.name.split(' ')[0] || 'there';
   const date = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
 
   return <div className={collapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
     <aside className={(mobileNav ? 'sidebar open' : 'sidebar') + (collapsed ? ' collapsed' : '')}>
-      <div className="brand"><span className="brand-mark">D</span><span className="brand-name">daymark</span></div>
+      <Link to="/" className="brand" title="Go to home page"><span className="brand-mark">D</span><span className="brand-name">daymark</span></Link>
       <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label="Close menu">×</button>
       <nav><p>WORKSPACE</p>
         <button title="My tasks" className={view === 'tasks' ? 'active' : ''} onClick={() => { setView('tasks'); setMobileNav(false); }}><ListTodo /><span>My tasks</span></button>
@@ -85,11 +95,11 @@ export function Dashboard() {
       <header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu /></button><span>{date}</span><div className="top-actions"><ThemeToggle /><button className="secondary signout" onClick={logout}><LogOut /> Sign out</button></div></header>
       <div className="content">{view === 'bin' ? <RecycleBin onChange={loadSummary} /> : view === 'profile' ? <ProfilePage /> : <>
         <section className="welcome"><div><p className="eyebrow">YOUR DAY AT A GLANCE</p><h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {first}.</h1><p>Here’s what’s on your plate. One thing at a time.</p></div><button className="primary" onClick={() => { setEditing(null); setModal(true); }}><Plus />Add a task</button></section>
-        <section className="summary-grid">{cards.map(([label, count, Icon, tone]) => <button className={'summary-card ' + tone} key={label} onClick={() => label === 'Pending' ? setStatus('pending') : label === 'In progress' ? setStatus('in_progress') : label === 'Completed' ? setStatus('completed') : label === 'All tasks' ? setStatus('') : undefined}><span><Icon /></span><div><strong>{count}</strong><small>{label}</small></div></button>)}</section>
-        <section className="task-section">
+        <section className="summary-grid">{cards.map(([label, count, Icon, tone]) => <button type="button" className={'summary-card ' + tone} key={label} onClick={() => selectSummary(label)}><span><Icon /></span><div><strong>{count}</strong><small>{label}</small></div></button>)}</section>
+        <section className="task-section" ref={taskSectionRef}>
           <div className="section-title"><div><p className="eyebrow">THE LIST</p><h2>Things to do</h2></div><span>{tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}</span></div>
           <div className="toolbar"><div className="search"><Search /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by task title…" aria-label="Search tasks" />{search && <button className="clear-input" onClick={() => setSearch('')} aria-label="Clear search"><X /></button>}</div>
-            <div className="filters"><label>Status<ChevronDown /><select value={status} onChange={(event) => setStatus(event.target.value as Status | '')}><option value="">All statuses</option><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></label><label>Priority<ChevronDown /><select value={priority} onChange={(event) => setPriority(event.target.value as Priority | '')}><option value="">All priorities</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label>Sort<ChevronDown /><select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest created</option><option value="oldest">Oldest created</option><option value="due_date">Due date</option></select></label></div>
+            <div className="filters"><label>Status<ChevronDown /><select value={status} onChange={(event) => { setOverdueOnly(false); setStatus(event.target.value as Status | ''); }}><option value="">All statuses</option><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></label><label>Priority<ChevronDown /><select value={priority} onChange={(event) => setPriority(event.target.value as Priority | '')}><option value="">All priorities</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label>Sort<ChevronDown /><select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest created</option><option value="oldest">Oldest created</option><option value="due_date">Due date</option></select></label></div>
           </div>
           <div className="date-filter"><span><CalendarRange />Due date range</span><label>From<input type="date" value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} /></label><span className="date-separator">to</span><label>Until<input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} /></label>{hasFilters && <button className="filter-clear" onClick={clearFilters}>Clear all</button>}</div>
           {dateError && <p className="filter-error">{dateError}</p>}
