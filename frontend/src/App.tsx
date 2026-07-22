@@ -1,3 +1,8 @@
-﻿import { Navigate,Route,Routes } from 'react-router-dom'; import { Toaster } from 'sonner'; import { AuthProvider,useAuth } from './context/AuthContext'; import { Dashboard } from './components/Dashboard'; import { LoginPage } from './components/LoginPage';
-function Pages(){const{token}=useAuth();return <Routes><Route path="/login" element={token?<Navigate to="/" replace/>:<LoginPage/>}/><Route path="/" element={token?<Dashboard/>:<Navigate to="/login" replace/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes>;}
-export default function App(){return <AuthProvider><Pages/><Toaster position="top-right" richColors/></AuthProvider>;}
+﻿import { Navigate, Route, Routes } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { Dashboard } from './components/Dashboard';
+import { LoginPage } from './components/LoginPage';
+function Pages() { const { token } = useAuth(); return <Routes><Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} /><Route path="/" element={token ? <Dashboard /> : <Navigate to="/login" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>; }
+export default function App() { return <ThemeProvider><AuthProvider><Pages /><Toaster position="top-right" richColors theme="system" /></AuthProvider></ThemeProvider>; }
