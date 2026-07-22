@@ -140,3 +140,32 @@ npm test
 - JWTs cannot be revoked before their eight-hour expiry. A production version would use short-lived access tokens and rotating refresh tokens in secure cookies.
 - The current list has no pagination; it is appropriate for a personal daily task list but should be added for large datasets.
 - Deployment URLs are not included because this repository is set up for local review.
+
+## Recycle bin and task dates
+
+Deleting a task now performs a soft delete by setting `deleted_at`. Recycle-bin tasks can be restored or permanently removed. Expired items are permanently removed after five days whenever authenticated task data is loaded.
+
+MySQL owns all lifecycle timestamps:
+
+- `created_at` is filled when a row is inserted.
+- `updated_at` changes automatically whenever a row is updated.
+- `deleted_at` is set when a task moves to the recycle bin.
+
+Run migrations again after pulling this version:
+
+```bash
+npm run db:migrate -w backend
+```
+
+Additional authenticated endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/tasks/recycle-bin` | List recoverable tasks |
+| DELETE | `/api/tasks/recycle-bin` | Empty the recycle bin |
+| PATCH | `/api/tasks/:id/restore` | Restore a deleted task |
+| DELETE | `/api/tasks/:id/permanent` | Permanently delete a task |
+
+Task search also accepts optional `fromDate` and `toDate` query parameters in `YYYY-MM-DD` format. Both bounds apply to the task due date and can be combined with title, status, and priority filters.
+
+The appearance button switches between the shared light and dark palettes. The preference is saved locally and falls back to the operating-system preference on the first visit.

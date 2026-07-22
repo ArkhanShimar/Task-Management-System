@@ -1,10 +1,10 @@
 ﻿import 'dotenv/config';
 import { readFile, readdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve } from 'node:path';
+
 import { pool } from './pool.js';
 
-const directory = dirname(fileURLToPath(new URL('./migrations/', import.meta.url)));
+const directory = resolve(process.cwd(), 'src/database/migrations');
 
 try {
   await pool.query('CREATE TABLE IF NOT EXISTS migrations (name VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)');
