@@ -8,8 +8,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const data = await response.json().catch(() => ({ message: 'Could not reach the server.' }));
   if (!response.ok) {
     if (response.status === 401 && path !== '/auth/login') {
-      localStorage.removeItem('daymark_token'); localStorage.removeItem('daymark_user');
-      window.location.assign('/login');
+      localStorage.removeItem('daymark_token'); localStorage.removeItem('daymark_user'); window.location.assign('/login');
     }
     throw new ApiError(data.message, data.errors);
   }
@@ -17,6 +16,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 export const api = {
   login: (email: string, password: string) => request<{ token: string; user: User }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  profile: () => request<{ user: User }>('/profile'),
+  updateProfile: (profile: { name: string; email: string; currentPassword: string; newPassword: string }) => request<{ user: User; message: string }>('/profile', { method: 'PUT', body: JSON.stringify(profile) }),
   tasks: (query: string) => request<{ tasks: Task[] }>('/tasks' + query),
   summary: () => request<{ summary: Summary }>('/tasks/summary'),
   create: (task: TaskInput) => request<{ task: Task }>('/tasks', { method: 'POST', body: JSON.stringify(task) }),

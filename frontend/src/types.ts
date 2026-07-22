@@ -5,5 +5,5 @@ export type Task = {
   dueDate: string; createdAt: string; updatedAt: string; deletedAt?: string; daysRemaining?: number;
 };
 export type TaskInput = { title: string; description: string; priority: Priority; status: Status; dueDate: string };
-export type User = { id: number; name: string; email: string };
+export type User = { id: number; name: string; email: string; createdAt?: string; updatedAt?: string };
 export type Summary = { total: number; pending: number; inProgress: number; completed: number; overdue: number };

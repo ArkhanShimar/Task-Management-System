@@ -1,5 +1,5 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
-import { CalendarRange, CheckCircle2, ChevronDown, Clock3, ListTodo, LogOut, Menu, Plus, Search, TimerReset, Trash2, X, XCircle } from 'lucide-react';
+import { CalendarRange, CheckCircle2, ChevronDown, Clock3, ListTodo, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, TimerReset, Trash2, UserRound, X, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { Priority, Status, Summary, Task, TaskInput } from '../types';
@@ -8,6 +8,7 @@ import { RecycleBin } from './RecycleBin';
 import { TaskCard } from './TaskCard';
 import { TaskModal } from './TaskModal';
 import { ThemeToggle } from './ThemeToggle';
+import { ProfilePage } from './ProfilePage';
 
 const empty: Summary = { total: 0, pending: 0, inProgress: 0, completed: 0, overdue: 0 };
 
@@ -16,7 +17,7 @@ export function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [summary, setSummary] = useState(empty);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'tasks' | 'bin'>('tasks');
+  const [view, setView] = useState<'tasks' | 'bin' | 'profile'>('tasks');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<Status | ''>('');
   const [priority, setPriority] = useState<Priority | ''>('');
@@ -27,6 +28,8 @@ export function Dashboard() {
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [mobileNav, setMobileNav] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('daymark_sidebar') === 'collapsed');
+  const toggleSidebar = () => setCollapsed((current) => { const next = !current; localStorage.setItem('daymark_sidebar', next ? 'collapsed' : 'expanded'); return next; });
 
   const loadSummary = useCallback(async () => {
     try { setSummary((await api.summary()).summary); }
@@ -66,20 +69,21 @@ export function Dashboard() {
   const first = user?.name.split(' ')[0] || 'there';
   const date = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
 
-  return <div className="app-shell">
-    <aside className={mobileNav ? 'sidebar open' : 'sidebar'}>
-      <div className="brand"><span className="brand-mark">D</span> daymark</div>
+  return <div className={collapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
+    <aside className={(mobileNav ? 'sidebar open' : 'sidebar') + (collapsed ? ' collapsed' : '')}>
+      <div className="brand"><span className="brand-mark">D</span><span className="brand-name">daymark</span></div>
       <button className="mobile-close" onClick={() => setMobileNav(false)} aria-label="Close menu">×</button>
       <nav><p>WORKSPACE</p>
-        <button className={view === 'tasks' ? 'active' : ''} onClick={() => { setView('tasks'); setMobileNav(false); }}><ListTodo />My tasks</button>
-        <button className={view === 'bin' ? 'active' : ''} onClick={() => { setView('bin'); setMobileNav(false); }}><Trash2 />Recycle bin</button>
+        <button title="My tasks" className={view === 'tasks' ? 'active' : ''} onClick={() => { setView('tasks'); setMobileNav(false); }}><ListTodo /><span>My tasks</span></button>
+        <button title="Recycle bin" className={view === 'bin' ? 'active' : ''} onClick={() => { setView('bin'); setMobileNav(false); }}><Trash2 /><span>Recycle bin</span></button>
+        <button title="Manage profile" className={view === 'profile' ? 'active' : ''} onClick={() => { setView('profile'); setMobileNav(false); }}><UserRound /><span>Manage profile</span></button>
       </nav>
-      <div className="sidebar-tip"><span>5</span><p><b>Five-day safety net</b>Deleted tasks are recoverable before cleanup.</p></div>
+      <button className="sidebar-collapse" onClick={toggleSidebar} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>{collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}<span>{collapsed ? 'Expand' : 'Collapse sidebar'}</span></button>
       <div className="sidebar-foot"><div className="avatar">{first[0]}</div><div><b>{user?.name}</b><small>{user?.email}</small></div><button className="icon-button" onClick={logout} title="Sign out"><LogOut /></button></div>
     </aside>
     <main className="workspace">
       <header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu /></button><span>{date}</span><div className="top-actions"><ThemeToggle /><button className="secondary signout" onClick={logout}><LogOut /> Sign out</button></div></header>
-      <div className="content">{view === 'bin' ? <RecycleBin onChange={loadSummary} /> : <>
+      <div className="content">{view === 'bin' ? <RecycleBin onChange={loadSummary} /> : view === 'profile' ? <ProfilePage /> : <>
         <section className="welcome"><div><p className="eyebrow">YOUR DAY AT A GLANCE</p><h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {first}.</h1><p>Here’s what’s on your plate. One thing at a time.</p></div><button className="primary" onClick={() => { setEditing(null); setModal(true); }}><Plus />Add a task</button></section>
         <section className="summary-grid">{cards.map(([label, count, Icon, tone]) => <button className={'summary-card ' + tone} key={label} onClick={() => label === 'Pending' ? setStatus('pending') : label === 'In progress' ? setStatus('in_progress') : label === 'Completed' ? setStatus('completed') : label === 'All tasks' ? setStatus('') : undefined}><span><Icon /></span><div><strong>{count}</strong><small>{label}</small></div></button>)}</section>
         <section className="task-section">
