@@ -190,3 +190,15 @@ SEED_USER_PASSWORD=123456
 ```
 
 The assessment email and password remain the defaults required by the brief. The login form itself starts empty and does not embed credentials into the UI.
+
+## Application routes and landing page
+
+- `/` is the public Daymark landing page.
+- `/login` contains the assessment sign-in form.
+- `/dashboard` is protected and redirects unauthenticated visitors to login.
+- The dashboard logo returns to the public home page.
+- Landing-page calls to action show **Open dashboard** for authenticated users and **Get started** otherwise.
+
+Dashboard summary cards are interactive shortcuts. Selecting a card clears unrelated filters, applies its status (including a real overdue-only API query), and smoothly scrolls the task list into view. The task list endpoint accepts `overdue=true` to return incomplete tasks with a due date before today.
+
+The landing illustration is built with semantic HTML and CSS 3D transforms rather than a large image or rendering library. Scroll sections use IntersectionObserver for one-time reveal transitions and respect the operating system's reduced-motion setting.
