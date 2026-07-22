@@ -1,6 +1,13 @@
-﻿# Daymark Task Manager
+# Daymark Task Manager
 
 Daymark is a full-stack task management app built for the Koncepthive internship assessment. It gives one authenticated user a clear overview of daily work and a focused place to create, find, update, and finish tasks.
+
+## Live application
+
+- **Frontend:** https://task-management-system-frontend-mskfz61xh.vercel.app/
+- **Backend:** https://task-management-system-8xwk.onrender.com
+- **API health check:** https://task-management-system-8xwk.onrender.com/api/health
+- **GitHub repository:** https://github.com/ArkhanShimar/Task-Management-System
 
 ## Features
 
@@ -139,7 +146,6 @@ npm test
 - There is no registration or password recovery because the brief specifies a single seeded login.
 - JWTs cannot be revoked before their eight-hour expiry. A production version would use short-lived access tokens and rotating refresh tokens in secure cookies.
 - The current list has no pagination; it is appropriate for a personal daily task list but should be added for large datasets.
-- Deployment URLs are not included because this repository is set up for local review.
 
 ## Recycle bin and task dates
 
