@@ -4,7 +4,7 @@ Daymark is a full-stack task management app built for the Koncepthive internship
 
 ## Live application
 
-- **Frontend:** https://task-management-system-frontend-mskfz61xh.vercel.app/
+- **Frontend:** https://task-management-system-frontend-seven.vercel.app/
 - **Backend:** https://task-management-system-8xwk.onrender.com
 - **API health check:** https://task-management-system-8xwk.onrender.com/api/health
 - **GitHub repository:** https://github.com/ArkhanShimar/Task-Management-System
