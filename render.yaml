@@ -1,0 +1,35 @@
+﻿services:
+  - type: web
+    name: daymark-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build -w backend && npm run db:migrate -w backend && npm run db:seed -w backend
+    startCommand: npm start -w backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: FRONTEND_URL
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL_CA
+        sync: false
+      - key: SEED_USER_NAME
+        value: Admin User
+      - key: SEED_USER_EMAIL
+        value: admin@test.com
+      - key: SEED_USER_PASSWORD
+        value: "123456"

@@ -217,3 +217,25 @@ Every task receives a one-day-early reminder by default. The create/edit form ca
 The protected `GET /api/reminders` endpoint returns all reminder-enabled, incomplete tasks with a calculated `reminderDate`, `reminderState`, and active/upcoming totals. The reminder date is derived from `due_date - reminder_days_before`, so editing a due date automatically moves the reminder too.
 
 The dashboard checks active reminders after login, shows a sidebar badge, and sends at most one in-app toast per task per calendar day. Users may opt into the browser Notification API from the Reminders page. Browser alerts work while Daymark is open; background notifications while the site is closed would require a service worker plus a scheduled push-notification backend.
+
+## Deployment configuration
+
+The repository includes:
+
+- `render.yaml` with the backend build/start commands and health check.
+- `frontend/vercel.json` with the SPA fallback required for direct visits to `/login` and `/dashboard`.
+- Optional `DB_SSL_CA` support for verified TLS connections to hosted MySQL services such as Aiven.
+
+For an existing Render web service, set the build command manually to:
+
+```bash
+npm ci --include=dev && npm run build -w backend && npm run db:migrate -w backend && npm run db:seed -w backend
+```
+
+The `--include=dev` flag is required because TypeScript and its declaration packages are build-time development dependencies, while Render runs with `NODE_ENV=production`. Use this start command:
+
+```bash
+npm start -w backend
+```
+
+Paste Aiven's complete CA certificate, including the BEGIN/END lines, into the multiline Render secret `DB_SSL_CA`.

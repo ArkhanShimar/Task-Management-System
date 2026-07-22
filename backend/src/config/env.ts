@@ -5,5 +5,6 @@ const schema = z.object({
   JWT_SECRET: z.string().min(16).default('local-dev-secret-change-me'), JWT_EXPIRES_IN: z.string().default('8h'),
   DB_HOST: z.string().default('localhost'), DB_PORT: z.coerce.number().default(3306),
   DB_NAME: z.string().default('daymark'), DB_USER: z.string().default('root'), DB_PASSWORD: z.string().default(''),
+  DB_SSL_CA: z.string().optional(),
 });
 export const env = schema.parse(process.env);
